@@ -45,8 +45,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             
-            // UserDetailsService 명시적 설정
-            .userDetailsService(customUserDetailsService)
+//            // UserDetailsService 명시적 설정
+//            .userDetailsService(customUserDetailsService)
             
             // FormLogin 설정
             .formLogin(config -> {
@@ -56,27 +56,12 @@ public class SecurityConfig {
                 config.passwordParameter("password");
                 config.successHandler(new APILoginSuccessHandler(jwtUtil, memberRepository));
                 config.failureHandler(new APILoginFailHandler());
-            })
+            });
             
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/api/members/login", 
-                    "/api/members/multipart", 
-                    "/api/members/check-email",
-                    "/api/members/check-nickname", 
-                    "/api/members/search-nickname",
-                    "/api/members/reset-password", 
-                    "/api/members/refresh", 
-                    "/api/members/logout",
-                    "/api/members/test-cookies", 
-                    "/api/members/recommended-calories", 
-                    "/api/health"
-                ).permitAll()
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(new JWTCheckFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
-            .exceptionHandling(ex -> ex.accessDeniedHandler(new CustomAccessDeniedHandler()));
-        
+            
+//            .addFilterBefore(new JWTCheckFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
+//            .exceptionHandling(ex -> ex.accessDeniedHandler(new CustomAccessDeniedHandler()));
+//        
         return http.build();
     }
     
