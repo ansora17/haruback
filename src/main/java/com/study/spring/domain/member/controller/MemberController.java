@@ -30,7 +30,7 @@ import java.time.LocalDate;
 import com.study.spring.domain.member.entity.Gender;
 import com.study.spring.domain.member.entity.ActivityLevel;
 
-//@CrossOrigin(origins = "http://localhost:5173")//remove once bk&frt connection success
+
 @RestController
 @RequestMapping("/api/members")
 @RequiredArgsConstructor

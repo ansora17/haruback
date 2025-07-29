@@ -30,38 +30,43 @@ import com.study.spring.domain.member.repository.MemberRepository;
 @RequiredArgsConstructor
 @Log4j2
 public class SecurityConfig {
-    
+
     private final JWTUtil jwtUtil;
     private final MemberRepository memberRepository;
-    private final CustomUserDetailsService customUserDetailsService; // 추가
-    
+    private final CustomUserDetailsService customUserDetailsService;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         
-        log.info("--------------------- security config ---------------------");
+        log.info("--------------------- security config - 완전 오픈 모드 ---------------------");
         
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             
-//            // UserDetailsService 명시적 설정
-//            .userDetailsService(customUserDetailsService)
+            // UserDetailsService 설정 (로그인용)
+            .userDetailsService(customUserDetailsService)
             
-            // FormLogin 설정
+            // FormLogin 설정 (로그인은 유지)
             .formLogin(config -> {
                 config.loginPage("/api/members/login");
-                config.loginProcessingUrl("/api/members/login"); // 추가
-                config.usernameParameter("nickname"); // 추가 (기본값은 username)
+                config.loginProcessingUrl("/api/members/login");
+                config.usernameParameter("nickname");
                 config.passwordParameter("password");
                 config.successHandler(new APILoginSuccessHandler(jwtUtil, memberRepository));
                 config.failureHandler(new APILoginFailHandler());
-            });
+            })
             
+            // 🔥 모든 요청 완전 허용 - 인증 없이 모든 API 접근 가능
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll() // 모든 요청 허용!
+            );
             
-//            .addFilterBefore(new JWTCheckFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
-//            .exceptionHandling(ex -> ex.accessDeniedHandler(new CustomAccessDeniedHandler()));
-//        
+            // JWT 필터와 예외 처리는 주석 처리 (완전 오픈)
+            // .addFilterBefore(new JWTCheckFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
+            // .exceptionHandling(ex -> ex.accessDeniedHandler(new CustomAccessDeniedHandler()));
+        
         return http.build();
     }
     
@@ -69,10 +74,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
+        // 🌐 모든 도메인 허용
         configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("HEAD", "GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
+        
+        configuration.setAllowedMethods(Arrays.asList(
+            "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"
+        ));
+        
+        configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
