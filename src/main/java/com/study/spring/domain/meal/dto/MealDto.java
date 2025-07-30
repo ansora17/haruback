@@ -75,6 +75,7 @@ public class MealDto {
         private Float fat;
         private Float sodium;
         private Float fiber;
+        private String foodCategory; //음식 카테고리
     }
 
     @NoArgsConstructor
@@ -90,6 +91,7 @@ public class MealDto {
         private Float fat;
         private Float sodium;
         private Float fiber;
+        private String foodCategory;
 
         public static FoodResponse from(Food food) {
             return FoodResponse.builder()
@@ -101,6 +103,7 @@ public class MealDto {
                     .fat(food.getFat())
                     .sodium(food.getSodium())
                     .fiber(food.getFiber())
+                    .foodCategory(food.getFoodCategory())
                     .build();
         }
     }

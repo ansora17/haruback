@@ -56,6 +56,7 @@ public class MealService {
                         .fat(foodRequest.getFat())
                         .sodium(foodRequest.getSodium())
                         .fiber(foodRequest.getFiber())
+                        .foodCategory(foodRequest.getFoodCategory())
                         .build();
                 
                 // 양방향 연관관계 설정
