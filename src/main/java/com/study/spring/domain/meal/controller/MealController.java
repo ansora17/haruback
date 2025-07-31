@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/meals")
@@ -26,10 +27,100 @@ public class MealController {
     public ResponseEntity<MealDto.Response> createMeal(
             @RequestParam("memberId") Long memberId,  // 이름 명시
             @RequestBody MealDto.Request request) {
+        System.out.println("=== createMeal 엔드포인트 호출됨 ===");
+        System.out.println("memberId: " + memberId);
+        System.out.println("request: " + request);
         return ResponseEntity.ok(mealService.createMeal(memberId, request));
     }
 
-    // 특정 식사 기록 조회
+    // 새로운 데이터 구조로 식사 기록 생성
+    @PostMapping("/create-with-foods")
+    public ResponseEntity<MealDto.Response> createMealWithFoods(
+            @RequestParam("memberId") Long memberId,
+            @RequestParam("mealType") MealType mealType,
+            @RequestParam(value = "imageUrl", required = false) String imageUrl,
+            @RequestParam(value = "memo", required = false) String memo,
+            @RequestBody List<Map<String, Object>> foodsData) {
+        
+        System.out.println("=== createMealWithFoods 엔드포인트 호출됨 ===");
+        System.out.println("memberId: " + memberId);
+        System.out.println("mealType: " + mealType);
+        System.out.println("imageUrl: " + imageUrl);
+        System.out.println("memo: " + memo);
+        
+        // 디버깅을 위한 로그 추가
+        System.out.println("Received foodsData: " + foodsData);
+        System.out.println("foodsData size: " + foodsData.size());
+        
+        // foodsData를 MealDto.Request 형태로 변환
+        List<MealDto.FoodRequest> foods = foodsData.stream()
+                .map(foodMap -> {
+                    // 각 foodMap의 키들을 출력하여 실제 필드명 확인
+                    System.out.println("Food map keys: " + foodMap.keySet());
+                    System.out.println("Food map values: " + foodMap);
+                    
+                    // 모든 가능한 필드명을 시도
+                    String foodName = null;
+                    if (foodMap.containsKey("foodName")) {
+                        foodName = (String) foodMap.get("foodName");
+                    } else if (foodMap.containsKey("food_name")) {
+                        foodName = (String) foodMap.get("food_name");
+                    } else if (foodMap.containsKey("name")) {
+                        foodName = (String) foodMap.get("name");
+                    } else {
+                        // 모든 키를 출력하여 실제 필드명 확인
+                        System.out.println("Available keys: " + foodMap.keySet());
+                        for (String key : foodMap.keySet()) {
+                            System.out.println("Key: " + key + ", Value: " + foodMap.get(key));
+                        }
+                        throw new IllegalArgumentException("foodName field not found in data");
+                    }
+                    
+                    System.out.println("Extracted foodName: " + foodName);
+                    
+                    if (foodName == null || foodName.trim().isEmpty()) {
+                        throw new IllegalArgumentException("foodName cannot be null or empty");
+                    }
+                    
+                                         return MealDto.FoodRequest.builder()
+                             .foodName(foodName)
+                             .calories(foodMap.get("calories") != null ? 
+                                     Integer.valueOf(foodMap.get("calories").toString()) : null)
+                             .carbohydrate(foodMap.get("carbohydrate") != null ? 
+                                     Float.valueOf(foodMap.get("carbohydrate").toString()) : null)
+                             .protein(foodMap.get("protein") != null ? 
+                                     Float.valueOf(foodMap.get("protein").toString()) : null)
+                             .fat(foodMap.get("fat") != null ? 
+                                     Float.valueOf(foodMap.get("fat").toString()) : null)
+                             .sodium(foodMap.get("sodium") != null ? 
+                                     Float.valueOf(foodMap.get("sodium").toString()) : null)
+                             .fiber(foodMap.get("fiber") != null ? 
+                                     Float.valueOf(foodMap.get("fiber").toString()) : null)
+                             .foodCategory((String) foodMap.get("foodCategory"))
+                             .totalAmount(foodMap.get("totalAmount") != null ? 
+                                     Integer.valueOf(foodMap.get("totalAmount").toString()) : null)
+                             .build();
+                })
+                .collect(Collectors.toList());
+
+        MealDto.Request request = MealDto.Request.builder()
+                .mealType(mealType)
+                .imageUrl(imageUrl)
+                .memo(memo)
+                .foods(foods)
+                .build();
+
+        return ResponseEntity.ok(mealService.createMeal(memberId, request));
+    }
+
+    // 테스트용 엔드포인트
+    @PostMapping("/test")
+    public ResponseEntity<String> testEndpoint(@RequestBody Object data) {
+        System.out.println("=== test 엔드포인트 호출됨 ===");
+        System.out.println("Received data: " + data);
+        System.out.println("Data type: " + data.getClass().getName());
+        return ResponseEntity.ok("Test endpoint called successfully");
+    }
     @GetMapping("/{id}")
     public ResponseEntity<MealDto.Response> getMeal(@PathVariable("id") Long id) {
         return ResponseEntity.ok(mealService.getMeal(id));

@@ -70,12 +70,13 @@ public class MealDto {
     public static class FoodRequest {
         private String foodName;
         private Integer calories;
-        private Float carbohydrate;
+        private Float carbohydrate; // 클라이언트 데이터 구조에 맞게 단수형으로 변경
         private Float protein;
         private Float fat;
         private Float sodium;
         private Float fiber;
-        private String foodCategory; //음식 카테고리
+        private String foodCategory; // 클라이언트 데이터 구조에 맞게 카멜케이스로 변경
+        private Integer totalAmount; // 클라이언트 데이터 구조에 맞게 카멜케이스로 변경
     }
 
     @NoArgsConstructor
@@ -92,6 +93,7 @@ public class MealDto {
         private Float sodium;
         private Float fiber;
         private String foodCategory;
+        private Integer totalAmount;
 
         public static FoodResponse from(Food food) {
             return FoodResponse.builder()
@@ -104,6 +106,7 @@ public class MealDto {
                     .sodium(food.getSodium())
                     .fiber(food.getFiber())
                     .foodCategory(food.getFoodCategory())
+                    .totalAmount(food.getTotalAmount())
                     .build();
         }
     }

@@ -32,6 +32,7 @@ public class Food {
     private Float fat;
     private Float sodium;
     private Float fiber;
+    private Integer totalAmount; // 총 양 (g)
     
     @Column(length = 20)
     private String foodCategory; // 예: 한식, 양식, 중식, 일식, 분식 등

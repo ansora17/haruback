@@ -57,6 +57,7 @@ public class MealService {
                         .sodium(foodRequest.getSodium())
                         .fiber(foodRequest.getFiber())
                         .foodCategory(foodRequest.getFoodCategory())
+                        .totalAmount(foodRequest.getTotalAmount() != null ? foodRequest.getTotalAmount() : 100) // 기본값 100g
                         .build();
                 
                 // 양방향 연관관계 설정
