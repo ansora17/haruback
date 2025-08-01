@@ -119,12 +119,24 @@ public class MealController {
 
     // 이미지 분석 엔드포인트
     @PostMapping("/analyze-food-image")
-    public ResponseEntity<?> analyzeFoodImage(@RequestBody Map<String, String> request) {
+    public ResponseEntity<?> analyzeFoodImage(@RequestBody Map<String, Object> request) {
         try {
-            String imageUrl = request.get("image_url");
+            Object imageUrlObj = request.get("image_url");
+            String imageUrl = null;
+            
+            if (imageUrlObj instanceof String) {
+                imageUrl = (String) imageUrlObj;
+            } else if (imageUrlObj instanceof Map) {
+                // 만약 image_url이 객체로 들어온 경우
+                Map<String, Object> imageUrlMap = (Map<String, Object>) imageUrlObj;
+                imageUrl = (String) imageUrlMap.get("url");
+            }
+            
             if (imageUrl == null || imageUrl.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "이미지 URL을 입력해주세요"));
             }
+
+            System.out.println("Received image_url: " + imageUrl);
 
             // 이미지 URL을 base64로 변환
             String base64Image = convertImageUrlToBase64(imageUrl);
@@ -243,12 +255,24 @@ public class MealController {
                 })
                 .collect(Collectors.toList());
 
+        // 총 칼로리 계산
+        Integer totalCalories = foods.stream()
+                .mapToInt(food -> food.getCalories() != null ? food.getCalories() : 0)
+                .sum();
+        
+        System.out.println("=== 총 칼로리 계산 결과 ===");
+        System.out.println("Total Calories: " + totalCalories);
+        
         MealDto.Request request = MealDto.Request.builder()
                 .mealType(mealType)
                 .imageUrl(imageUrl)
                 .memo(memo)
                 .foods(foods)
+
                 .recordWeight(recordWeight)
+
+                .totalCalories(totalCalories)
+
                 .build();
 
         return ResponseEntity.ok(mealService.createMeal(memberId, request));

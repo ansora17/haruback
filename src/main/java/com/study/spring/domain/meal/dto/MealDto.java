@@ -45,23 +45,32 @@ public class MealDto {
         private LocalDate updatedAt;
         private LocalDateTime modifiedAt;
         private Double recordWeight;
+        private Integer totalCalories;
 
         public static Response from(Meal meal) {
+            List<FoodResponse> foods = meal.getFoods() != null ? 
+                    meal.getFoods().stream()
+                            .map(FoodResponse::from)
+                            .collect(Collectors.toList()) : 
+                    new ArrayList<>();
+            
+            // 총 칼로리 계산
+            Integer totalCalories = foods.stream()
+                    .mapToInt(food -> food.getCalories() != null ? food.getCalories() : 0)
+                    .sum();
+            
             return Response.builder()
                     .id(meal.getId())
                     .memberId(meal.getMember().getId())
                     .mealType(meal.getMealType())
                     .imageUrl(meal.getImageUrl())
                     .memo(meal.getMemo())
-                    .foods(meal.getFoods() != null ? 
-                            meal.getFoods().stream()
-                                    .map(FoodResponse::from)
-                                    .collect(Collectors.toList()) : 
-                            new ArrayList<>())  // null-safe 처리
+                    .foods(foods)
                     .createdAt(meal.getCreatedAt() != null ? meal.getCreatedAt().toLocalDate() : null)
                     .updatedAt(meal.getUpdatedAt() != null ? meal.getUpdatedAt().toLocalDate() : null)
                     .modifiedAt(meal.getModifiedAt())
                     .recordWeight(meal.getRecordWeight())
+                    .totalCalories(totalCalories)
                     .build();
         }
     }
