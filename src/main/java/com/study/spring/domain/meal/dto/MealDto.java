@@ -43,6 +43,7 @@ public class MealDto {
         private LocalDate createdAt;
         private LocalDate updatedAt;
         private LocalDateTime modifiedAt;
+        private Double recordWeight;
 
         public static Response from(Meal meal) {
             return Response.builder()
@@ -59,6 +60,7 @@ public class MealDto {
                     .createdAt(meal.getCreatedAt() != null ? meal.getCreatedAt().toLocalDate() : null)
                     .updatedAt(meal.getUpdatedAt() != null ? meal.getUpdatedAt().toLocalDate() : null)
                     .modifiedAt(meal.getModifiedAt())
+                    .recordWeight(meal.getRecordWeight())
                     .build();
         }
     }
