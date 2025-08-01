@@ -89,6 +89,7 @@ public class MealDto {
         private Float fiber;
         private String foodCategory; // 클라이언트 데이터 구조에 맞게 카멜케이스로 변경
         private Integer totalAmount; // 클라이언트 데이터 구조에 맞게 카멜케이스로 변경
+        private Integer quantity; // 수량 추가
     }
 
     @NoArgsConstructor
@@ -106,6 +107,7 @@ public class MealDto {
         private Float fiber;
         private String foodCategory;
         private Integer totalAmount;
+        private Integer quantity; // 수량 추가
 
         public static FoodResponse from(Food food) {
             return FoodResponse.builder()
@@ -119,6 +121,7 @@ public class MealDto {
                     .fiber(food.getFiber())
                     .foodCategory(food.getFoodCategory())
                     .totalAmount(food.getTotalAmount())
+                    .quantity(food.getQuantity()) // 수량 추가
                     .build();
         }
     }

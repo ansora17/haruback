@@ -72,29 +72,6 @@ public class MealController {
         }
     }
 
-    // 파이썬 서버 상태 확인
-    @GetMapping("/check-python-server")
-    public ResponseEntity<?> checkPythonServer() {
-        try {
-            String pythonServerUrl = "http://localhost:8000/test";
-            
-            ResponseEntity<Map> response = restTemplate.exchange(
-                pythonServerUrl,
-                HttpMethod.GET,
-                null,
-                Map.class
-            );
-            
-            return ResponseEntity.ok(response.getBody());
-            
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of(
-                "error", "파이썬 서버에 연결할 수 없습니다",
-                "details", e.getMessage()
-            ));
-        }
-    }
-
     // 이미지 URL을 base64로 변환하는 유틸리티 메서드
     private String convertImageUrlToBase64(String imageUrl) {
         try {
@@ -251,6 +228,8 @@ public class MealController {
                              .foodCategory((String) foodMap.get("foodCategory"))
                              .totalAmount(foodMap.get("totalAmount") != null ? 
                                      Integer.valueOf(foodMap.get("totalAmount").toString()) : null)
+                             .quantity(foodMap.get("quantity") != null ? 
+                                     Integer.valueOf(foodMap.get("quantity").toString()) : null) // 수량 추가
                              .build();
                 })
                 .collect(Collectors.toList());
