@@ -36,6 +36,9 @@ public class Meal {
 
     @Column(name = "total_calories")
     private Integer totalCalories;
+    
+    @Column(name = "record_weight")
+    private Double recordWeight;
 
     @OneToMany(mappedBy = "meal", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
