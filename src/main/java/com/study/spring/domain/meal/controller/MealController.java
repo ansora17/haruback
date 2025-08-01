@@ -9,27 +9,257 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.net.URL;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.util.Base64;
 
 @RestController
 @RequestMapping("/api/meals")
 @RequiredArgsConstructor
 public class MealController {
     private final MealService mealService;
+    private final RestTemplate restTemplate;
+
+    // 파이썬 서버의 텍스트 분석 엔드포인트 호출
+    @PostMapping("/analyze-food-text")
+    public ResponseEntity<?> analyzeFoodText(@RequestBody Map<String, String> request) {
+        try {
+            String foodName = request.get("food_name");
+            if (foodName == null || foodName.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "음식 이름을 입력해주세요"));
+            }
+
+            // 파이썬 서버 URL (실제 서버 주소로 변경 필요)
+            String pythonServerUrl = "http://localhost:8000/api/food/analyze/text";
+            
+            // 요청 데이터 준비
+            Map<String, String> requestBody = Map.of("food_name", foodName);
+            
+            // HTTP 헤더 설정
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            // HTTP 엔티티 생성
+            HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestBody, headers);
+            
+            // 파이썬 서버에 요청
+            ResponseEntity<Map> response = restTemplate.exchange(
+                pythonServerUrl,
+                HttpMethod.POST,
+                entity,
+                Map.class
+            );
+            
+            return ResponseEntity.ok(response.getBody());
+            
+        } catch (Exception e) {
+            System.err.println("음식 분석 중 오류 발생: " + e.getMessage());
+            return ResponseEntity.status(500).body(Map.of(
+                "error", "음식 분석 중 오류가 발생했습니다",
+                "details", e.getMessage()
+            ));
+        }
+    }
+
+    // 파이썬 서버 상태 확인
+    @GetMapping("/check-python-server")
+    public ResponseEntity<?> checkPythonServer() {
+        try {
+            String pythonServerUrl = "http://localhost:8000/test";
+            
+            ResponseEntity<Map> response = restTemplate.exchange(
+                pythonServerUrl,
+                HttpMethod.GET,
+                null,
+                Map.class
+            );
+            
+            return ResponseEntity.ok(response.getBody());
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                "error", "파이썬 서버에 연결할 수 없습니다",
+                "details", e.getMessage()
+            ));
+        }
+    }
+
+    // 이미지 URL을 base64로 변환하는 유틸리티 메서드
+    private String convertImageUrlToBase64(String imageUrl) {
+        try {
+            URL url = new URL(imageUrl);
+            try (InputStream inputStream = url.openStream();
+                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+                
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+                
+                byte[] imageBytes = outputStream.toByteArray();
+                return Base64.getEncoder().encodeToString(imageBytes);
+            }
+        } catch (Exception e) {
+            System.err.println("이미지 URL을 base64로 변환 중 오류: " + e.getMessage());
+            throw new RuntimeException("이미지를 base64로 변환할 수 없습니다", e);
+        }
+    }
+
+    // 이미지 분석 엔드포인트
+    @PostMapping("/analyze-food-image")
+    public ResponseEntity<?> analyzeFoodImage(@RequestBody Map<String, String> request) {
+        try {
+            String imageUrl = request.get("image_url");
+            if (imageUrl == null || imageUrl.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "이미지 URL을 입력해주세요"));
+            }
+
+            // 이미지 URL을 base64로 변환
+            String base64Image = convertImageUrlToBase64(imageUrl);
+            
+            // 파이썬 서버 URL
+            String pythonServerUrl = "http://localhost:8000/api/food/analyze";
+            
+            // 요청 데이터 준비 (base64 이미지 포함)
+            Map<String, String> requestBody = Map.of("image_url", base64Image);
+            
+            // HTTP 헤더 설정
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            // HTTP 엔티티 생성
+            HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestBody, headers);
+            
+            // 파이썬 서버에 요청
+            ResponseEntity<Map> response = restTemplate.exchange(
+                pythonServerUrl,
+                HttpMethod.POST,
+                entity,
+                Map.class
+            );
+            
+            return ResponseEntity.ok(response.getBody());
+            
+        } catch (Exception e) {
+            System.err.println("이미지 분석 중 오류 발생: " + e.getMessage());
+            return ResponseEntity.status(500).body(Map.of(
+                "error", "이미지 분석 중 오류가 발생했습니다",
+                "details", e.getMessage()
+            ));
+        }
+    }
 
     // 식사 기록 생성
     @PostMapping
     public ResponseEntity<MealDto.Response> createMeal(
             @RequestParam("memberId") Long memberId,  // 이름 명시
             @RequestBody MealDto.Request request) {
+        System.out.println("=== createMeal 엔드포인트 호출됨 ===");
+        System.out.println("memberId: " + memberId);
+        System.out.println("request: " + request);
         return ResponseEntity.ok(mealService.createMeal(memberId, request));
     }
 
-    // 특정 식사 기록 조회
+    // 새로운 데이터 구조로 식사 기록 생성
+    @PostMapping("/create-with-foods")
+    public ResponseEntity<MealDto.Response> createMealWithFoods(
+            @RequestParam("memberId") Long memberId,
+            @RequestParam("mealType") MealType mealType,
+            @RequestParam(value = "imageUrl", required = false) String imageUrl,
+            @RequestParam(value = "memo", required = false) String memo,
+            @RequestBody List<Map<String, Object>> foodsData) {
+        
+        System.out.println("=== createMealWithFoods 엔드포인트 호출됨 ===");
+        System.out.println("memberId: " + memberId);
+        System.out.println("mealType: " + mealType);
+        System.out.println("imageUrl: " + imageUrl);
+        System.out.println("memo: " + memo);
+        
+        // 디버깅을 위한 로그 추가
+        System.out.println("Received foodsData: " + foodsData);
+        System.out.println("foodsData size: " + foodsData.size());
+        
+        // foodsData를 MealDto.Request 형태로 변환
+        List<MealDto.FoodRequest> foods = foodsData.stream()
+                .map(foodMap -> {
+                    // 각 foodMap의 키들을 출력하여 실제 필드명 확인
+                    System.out.println("Food map keys: " + foodMap.keySet());
+                    System.out.println("Food map values: " + foodMap);
+                    
+                    // 모든 가능한 필드명을 시도
+                    String foodName = null;
+                    if (foodMap.containsKey("foodName")) {
+                        foodName = (String) foodMap.get("foodName");
+                    } else if (foodMap.containsKey("food_name")) {
+                        foodName = (String) foodMap.get("food_name");
+                    } else if (foodMap.containsKey("name")) {
+                        foodName = (String) foodMap.get("name");
+                    } else {
+                        // 모든 키를 출력하여 실제 필드명 확인
+                        System.out.println("Available keys: " + foodMap.keySet());
+                        for (String key : foodMap.keySet()) {
+                            System.out.println("Key: " + key + ", Value: " + foodMap.get(key));
+                        }
+                        throw new IllegalArgumentException("foodName field not found in data");
+                    }
+                    
+                    System.out.println("Extracted foodName: " + foodName);
+                    
+                    if (foodName == null || foodName.trim().isEmpty()) {
+                        throw new IllegalArgumentException("foodName cannot be null or empty");
+                    }
+                    
+                                         return MealDto.FoodRequest.builder()
+                             .foodName(foodName)
+                             .calories(foodMap.get("calories") != null ? 
+                                     Integer.valueOf(foodMap.get("calories").toString()) : null)
+                             .carbohydrate(foodMap.get("carbohydrate") != null ? 
+                                     Float.valueOf(foodMap.get("carbohydrate").toString()) : null)
+                             .protein(foodMap.get("protein") != null ? 
+                                     Float.valueOf(foodMap.get("protein").toString()) : null)
+                             .fat(foodMap.get("fat") != null ? 
+                                     Float.valueOf(foodMap.get("fat").toString()) : null)
+                             .sodium(foodMap.get("sodium") != null ? 
+                                     Float.valueOf(foodMap.get("sodium").toString()) : null)
+                             .fiber(foodMap.get("fiber") != null ? 
+                                     Float.valueOf(foodMap.get("fiber").toString()) : null)
+                             .foodCategory((String) foodMap.get("foodCategory"))
+                             .totalAmount(foodMap.get("totalAmount") != null ? 
+                                     Integer.valueOf(foodMap.get("totalAmount").toString()) : null)
+                             .build();
+                })
+                .collect(Collectors.toList());
+
+        MealDto.Request request = MealDto.Request.builder()
+                .mealType(mealType)
+                .imageUrl(imageUrl)
+                .memo(memo)
+                .foods(foods)
+                .build();
+
+        return ResponseEntity.ok(mealService.createMeal(memberId, request));
+    }
+
+    // 테스트용 엔드포인트
+    @PostMapping("/test")
+    public ResponseEntity<String> testEndpoint(@RequestBody Object data) {
+        System.out.println("=== test 엔드포인트 호출됨 ===");
+        System.out.println("Received data: " + data);
+        System.out.println("Data type: " + data.getClass().getName());
+        return ResponseEntity.ok("Test endpoint called successfully");
+    }
     @GetMapping("/{id}")
     public ResponseEntity<MealDto.Response> getMeal(@PathVariable("id") Long id) {
         return ResponseEntity.ok(mealService.getMeal(id));
