@@ -27,6 +27,7 @@ public class MealDto {
         private List<FoodRequest> foods;
         private LocalDateTime modifiedAt;
         private Integer totalCalories;
+        private Double recordWeight;
     }
 
     @NoArgsConstructor
