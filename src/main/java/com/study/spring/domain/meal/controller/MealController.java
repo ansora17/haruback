@@ -179,6 +179,7 @@ public class MealController {
             @RequestParam("mealType") MealType mealType,
             @RequestParam(value = "imageUrl", required = false) String imageUrl,
             @RequestParam(value = "memo", required = false) String memo,
+            @RequestParam(value = "recordWeight", required = false) Double recordWeight,
             @RequestBody List<Map<String, Object>> foodsData) {
         
         System.out.println("=== createMealWithFoods 엔드포인트 호출됨 ===");
@@ -247,6 +248,7 @@ public class MealController {
                 .imageUrl(imageUrl)
                 .memo(memo)
                 .foods(foods)
+                .recordWeight(recordWeight)
                 .build();
 
         return ResponseEntity.ok(mealService.createMeal(memberId, request));

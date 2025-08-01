@@ -41,6 +41,7 @@ public class MealService {
                 .memo(request.getMemo())
                 .modifiedAt(request.getModifiedAt() != null ? request.getModifiedAt() : LocalDateTime.now().withSecond(0).withNano(0))
                 .totalCalories(request.getTotalCalories())
+                .recordWeight(request.getRecordWeight())
                 .build();
 
         Meal savedMeal = mealRepository.save(meal);
@@ -126,6 +127,8 @@ public class MealService {
                 .createdAt(meal.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
                 .modifiedAt(request.getModifiedAt() != null ? request.getModifiedAt() : LocalDateTime.now())
+                .totalCalories(request.getTotalCalories())  // totalCalories 추가
+                .recordWeight(request.getRecordWeight())  // recordWeight 추가
                 .build();
 
         Meal savedMeal = mealRepository.save(updatedMeal);
@@ -166,6 +169,8 @@ public class MealService {
                 .foods(meal.getFoods())
                 .createdAt(meal.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
+                .totalCalories(meal.getTotalCalories())  // 기존 totalCalories 유지
+                .recordWeight(meal.getRecordWeight())  // 기존 recordWeight 유지
                 .build();
 
         mealRepository.save(updatedMeal);
