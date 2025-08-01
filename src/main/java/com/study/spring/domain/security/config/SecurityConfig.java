@@ -24,7 +24,7 @@ import com.study.spring.domain.security.util.JWTCheckFilter;
 import com.study.spring.domain.security.util.JWTUtil;
 import com.study.spring.domain.member.repository.MemberRepository;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
