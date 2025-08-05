@@ -15,30 +15,30 @@ public class IssueController {
 
     @PostMapping
     public ResponseEntity<IssueDto.Response> createIssue(
-            @RequestParam Long adminId,
+            @RequestParam("adminId") Long adminId,
             @RequestBody IssueDto.Request request) {
         return ResponseEntity.ok(issueService.createIssue(adminId, request));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<IssueDto.Response> getIssue(@PathVariable Long id) {
+    public ResponseEntity<IssueDto.Response> getIssue(@PathVariable("id") Long id) {
         return ResponseEntity.ok(issueService.getIssue(id));
     }
 
     @GetMapping("/admin/{adminId}")
-    public ResponseEntity<List<IssueDto.Response>> getIssuesByAdminId(@PathVariable Long adminId) {
+    public ResponseEntity<List<IssueDto.Response>> getIssuesByAdminId(@PathVariable("adminId") Long adminId) {
         return ResponseEntity.ok(issueService.getIssuesByAdminId(adminId));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<IssueDto.Response> updateIssue(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestBody IssueDto.Request request) {
         return ResponseEntity.ok(issueService.updateIssue(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteIssue(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteIssue(@PathVariable("id") Long id) {
         issueService.deleteIssue(id);
         return ResponseEntity.noContent().build();
     }

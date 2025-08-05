@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -22,8 +24,9 @@ public class IssueService {
     }
 
     public IssueDto.Response getIssue(Long id) {
-        // TODO: Implement issue retrieval logic
-        return null;
+        Issue issue = issueRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "이슈를 찾을 수 없습니다."));
+        return IssueDto.Response.from(issue);
     }
 
     public List<IssueDto.Response> getIssuesByAdminId(Long adminId) {
