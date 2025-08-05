@@ -4,12 +4,17 @@ import com.study.spring.domain.issue.entity.Issue;
 import com.study.spring.domain.member.entity.Role;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
 import java.time.LocalDateTime;
 
 public class IssueDto {
 
     @Getter
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Request {
         private String title;
         private String content;
@@ -18,6 +23,8 @@ public class IssueDto {
 
     @Getter
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Response {
         private Long id;
         private String title;
